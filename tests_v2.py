@@ -1,6 +1,6 @@
 import unittest
 from Crypto.Cipher import AES
-from project import cbc_custom_decrypt
+from project import cbc_custom_decrypt, cbc_flip_fix
 
 
 class MyTestCase(unittest.TestCase):
@@ -28,6 +28,15 @@ class MyTestCase(unittest.TestCase):
         assert len(cipher) == 64
         cipher_text = AES.new(k, AES.MODE_CBC, iv)
         assert cipher_text.decrypt(cipher[16:]) == cbc_custom_decrypt(k, n, cipher)
+
+    def test_cbc_flip_fix(self):
+        k = b'\x81\x0ff\t\x04\xb6\xcf\x1f.\x10\x8frd\xb4E\x19'
+        iv = b'e|\x92\xd0\x8b\xd9\x00\xc8X\xf2Noi\xa1\x155'
+        plain_text = b'2222222222222222hhhhhhhhhhhhhhhhZZZZZZZZZZZZZZZZrrrrrrrrrrrrrrrr'
+        cipher = AES.new(k, AES.MODE_CBC, iv=iv)
+        cipher_text = cipher.encrypt(plain_text)
+        assert cbc_flip_fix(k, 4, iv + cipher_text[:31] + b'5' + cipher_text[32:]) == b'hhhhhhhhhhhhhhhh'
+        assert cbc_flip_fix(k, 4, iv + cipher_text[:32] + b'5' + cipher_text[33:]) == b'ZZZZZZZZZZZZZZZZ'
 
 
 if __name__ == '__main__':
